@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Бот бронирования агроусадьбы — демо</title>
+<style>
+:root {
+  --bg: #0a1510; --panel: #10201a; --panel-2: #142821; --line: #23402f;
+  --text: #f0fdf4; --muted: #9ab8a6; --accent: #4ade80; --accent-2: #a3e635;
+  --bubble-bot: #1a3226; --bubble-me: #15803d; --ok: #14532d; --btn: #0f2c1f; --btn-text: #86efac; --btn-line: #1f5236;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif; color: var(--text); min-height: 100vh;
+  background: radial-gradient(circle at 85% 10%, #14532d 0%, transparent 42%),
+              radial-gradient(circle at 5% 95%, #365314 0%, transparent 40%), var(--bg);
+}
+.page { max-width: 1180px; margin: 0 auto; padding: 48px 24px; display: grid; grid-template-columns: 1fr 400px; gap: 56px; align-items: start; }
+.back { display: inline-block; color: var(--muted); text-decoration: none; font-size: 15px; margin-bottom: 18px; }
+.back:hover { color: var(--text); }
+h1 { font-size: 50px; line-height: 1.05; font-weight: 800; letter-spacing: -1.5px; }
+h1 span { color: var(--accent); }
+.lead { font-size: 20px; color: var(--muted); margin-top: 16px; line-height: 1.5; max-width: 560px; }
+.features { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 32px; }
+.f { background: rgba(134,239,172,.06); border: 1px solid var(--line); border-radius: 18px; padding: 18px; }
+.f b { display: block; font-size: 17px; margin-bottom: 6px; }
+.f p { font-size: 15px; color: var(--muted); line-height: 1.45; }
+.tag { display: inline-block; font-size: 13px; font-weight: 700; color: var(--bg); background: var(--accent); border-radius: 999px; padding: 4px 12px; margin-bottom: 18px; letter-spacing: .3px; }
+.hint { margin-top: 28px; font-size: 15px; color: var(--muted); }
+.hint b { color: var(--text); }
+.owner { margin-top: 28px; }
+.owner h3 { font-size: 15px; color: var(--muted); font-weight: 600; margin-bottom: 10px; text-transform: uppercase; letter-spacing: .6px; }
+.notes { display: flex; flex-direction: column; gap: 10px; min-height: 60px; }
+.note { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 14px; padding: 12px 16px; font-size: 15px; line-height: 1.45; animation: pop .35s ease; }
+.note.cancel { border-left-color: #f87171; }
+.note small { color: var(--muted); }
+.note .acts { display: flex; gap: 8px; margin-top: 10px; }
+.note .acts button { flex: 1; border: 1px solid var(--btn-line); background: var(--btn); color: var(--btn-text); border-radius: 10px; padding: 8px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.note .acts button:disabled { opacity: .4; cursor: default; }
+.empty { font-size: 15px; color: #5f7f6c; font-style: italic; }
+
+.phone { position: sticky; top: 24px; height: 780px; border-radius: 48px; background: var(--panel); border: 3px solid #29503a; box-shadow: 0 30px 80px rgba(0,0,0,.55); display: flex; flex-direction: column; overflow: hidden; }
+.bar { display: flex; align-items: center; gap: 12px; padding: 22px 22px 14px; border-bottom: 1px solid var(--line); background: var(--panel-2); }
+.ava { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #15803d); display: grid; place-items: center; flex: none; font-size: 22px; }
+.bname { font-weight: 700; font-size: 17px; } .bstat { font-size: 13px; color: var(--accent); }
+.restart { margin-left: auto; background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 10px; padding: 6px 10px; font: inherit; font-size: 13px; cursor: pointer; }
+.restart:hover { color: var(--text); }
+.chat { flex: 1; overflow-y: auto; padding: 16px 14px; display: flex; flex-direction: column; gap: 8px; }
+.chat::-webkit-scrollbar { width: 6px; } .chat::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+.msg { max-width: 90%; padding: 10px 14px; border-radius: 18px; font-size: 15px; line-height: 1.45; white-space: pre-line; animation: pop .25s ease; }
+.msg.bot { background: var(--bubble-bot); align-self: flex-start; border-bottom-left-radius: 6px; }
+.msg.me { background: var(--bubble-me); align-self: flex-end; border-bottom-right-radius: 6px; }
+.msg.ok { background: var(--ok); }
+.kb { display: grid; gap: 6px; align-self: stretch; animation: pop .25s ease; }
+.kb button { background: var(--btn); color: var(--btn-text); border: 1px solid var(--btn-line); border-radius: 12px; padding: 10px 6px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .15s; }
+.kb button:hover:not(:disabled) { background: #14402b; }
+.kb button:disabled { opacity: .45; cursor: default; }
+.kb.cal { gap: 4px; }
+.kb.cal button { padding: 8px 0; font-size: 13px; }
+.kb.cal button.x { color: #f87171; }
+.kb.cal button.blank { background: transparent; border-color: transparent; color: var(--muted); }
+.kb.cal button.head { background: transparent; border-color: transparent; color: var(--muted); font-weight: 600; }
+.typing { align-self: flex-start; background: var(--bubble-bot); border-radius: 18px; padding: 12px 16px; display: flex; gap: 4px; }
+.typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: blink 1s infinite; }
+.typing i:nth-child(2) { animation-delay: .15s; } .typing i:nth-child(3) { animation-delay: .3s; }
+.input { display: flex; gap: 8px; padding: 12px 14px 20px; border-top: 1px solid var(--line); background: var(--panel-2); }
+.input input { flex: 1; background: var(--bg); border: 1px solid var(--line); color: var(--text); border-radius: 14px; padding: 12px 14px; font: inherit; font-size: 15px; outline: none; }
+.input input:focus { border-color: var(--accent); }
+.input button { background: var(--accent); color: var(--bg); border: none; border-radius: 14px; padding: 0 16px; font: inherit; font-weight: 700; cursor: pointer; }
+.input input:disabled, .input button:disabled { opacity: .4; }
+@keyframes pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes blink { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
+@media (max-width: 920px) {
+  .page { grid-template-columns: 1fr; gap: 32px; padding: 32px 16px; }
+  .phone { position: static; height: 720px; order: -1; }
+  h1 { font-size: 36px; }
+  .features { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <section>
+    <a class="back" href="../index.html">← Все проекты</a><br>
+    <div class="tag">ДЕМО · TELEGRAM-БОТ</div>
+    <h1>Бронирование домиков <span>без звонков</span></h1>
+    <p class="lead">Гость сам выбирает домик и свободные даты, видит итоговую цену и отправляет заявку. Владелец подтверждает её одной кнопкой.</p>
+    <div class="features">
+      <div class="f"><b>📅 Календарь занятости</b><p>Занятые даты недоступны — двойного бронирования не будет.</p></div>
+      <div class="f"><b>💰 Расчёт стоимости</b><p>Разные цены в будни и выходные, доп. услуги — итог считается сам.</p></div>
+      <div class="f"><b>✅ Подтверждение в один клик</b><p>Заявка приходит владельцу с кнопками, гость сразу получает ответ.</p></div>
+      <div class="f"><b>🌲 Напоминание гостю</b><p>Накануне заезда — адрес, время и телефон усадьбы.</p></div>
+    </div>
+    <div class="owner">
+      <h3>🔔 Так видит заявки владелец</h3>
+      <div class="notes" id="notes"><div class="empty">Отправьте заявку в боте справа — она появится здесь, и её можно будет подтвердить.</div></div>
+    </div>
+    <p class="hint">👉 <b>Попробуйте сами:</b> нажимайте кнопки в телефоне справа.</p>
+  </section>
+
+  <div class="phone">
+    <div class="bar">
+      <div class="ava">🌲</div>
+      <div><div class="bname">Усадьба «Лесная поляна»</div><div class="bstat">бот</div></div>
+      <button class="restart" id="restart">↺ Заново</button>
+    </div>
+    <div class="chat" id="chat"></div>
+    <form class="input" id="form">
+      <input id="text" placeholder="Сообщение" autocomplete="off" disabled>
+      <button id="send" disabled>➤</button>
+    </form>
+  </div>
+</div>
+
+<script>
+const ESTATE = { name: "Агроусадьба «Лесная поляна»", address: "Витебская обл., д. Примерная, ул. Озёрная, 5", phone: "+375 29 000-00-00" };
+const HOUSES = [
+  { id: 1, emoji: "🛖", title: "Эко-домик", capacity: 2, weekday: 80, weekend: 100, desc: "Уютный домик для двоих: двуспальная кровать, печка, терраса." },
+  { id: 2, emoji: "🏡", title: "Домик у озера", capacity: 4, weekday: 120, weekend: 150, desc: "Две спальни, кухня, терраса с видом на озеро." },
+  { id: 3, emoji: "🏠", title: "Большой дом", capacity: 10, weekday: 300, weekend: 380, desc: "4 спальни, гостиная с камином, большая кухня." },
+];
+const EXTRAS = [
+  { id: 1, emoji: "🧖", title: "Баня на дровах", price: 60 },
+  { id: 2, emoji: "🔥", title: "Беседка с мангалом", price: 30 },
+  { id: 3, emoji: "🚣", title: "Лодка для рыбалки", price: 20 },
+  { id: 4, emoji: "🐕", title: "Проживание с питомцем", price: 15 },
+];
+const WD = ["Вс","Пн","Вт","Ср","Чт","Пт","Сб"];
+const MONTHS = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+const MONTHS_NOM = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
+const DAY = 864e5, MAX_NIGHTS = 14, AHEAD = 120;
+const chat = document.getElementById("chat"), notes = document.getElementById("notes");
+const input = document.getElementById("text"), send = document.getElementById("send");
+
+const today = (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; })();
+const addDays = (d, n) => new Date(d.getTime() + n * DAY);
+const same = (a, b) => a.getTime() === b.getTime();
+const fmt = d => `${WD[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+const nightsWord = n => n % 10 === 1 && n % 100 !== 11 ? `${n} ночь` : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? `${n} ночи` : `${n} ночей`);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// Демонстрационно занятые ночи, чтобы календарь выглядел живым
+const seedBusy = { 1: [2, 3, 9, 10, 11], 2: [1, 2, 6, 7, 8, 15, 16], 3: [4, 5, 12, 13] };
+let bookings = [], b = {}, expectText = null, nextId = 1;
+
+function busy(houseId) {
+  const s = new Set((seedBusy[houseId] || []).map(n => addDays(today, n).getTime()));
+  for (const x of bookings) if (x.house.id === houseId && x.status !== "declined" && x.status !== "cancelled")
+    for (let d = x.ci; d < x.co; d = addDays(d, 1)) s.add(d.getTime());
+  return s;
+}
+function canIn(houseId, d, bz = busy(houseId)) { return d >= today && d <= addDays(today, AHEAD) && !bz.has(d.getTime()); }
+function maxOut(houseId, ci, bz = busy(houseId)) { let d = addDays(ci, 1); const lim = addDays(ci, MAX_NIGHTS); while (d < lim && !bz.has(d.getTime())) d = addDays(d, 1); return d; }
+function price(house, ci, co, extras) {
+  let stay = 0; for (let d = ci; d < co; d = addDays(d, 1)) stay += (d.getDay() === 5 || d.getDay() === 6) ? house.weekend : house.weekday;
+  const ex = extras.reduce((s, id) => s + EXTRAS.find(e => e.id === id).price, 0);
+  return [stay, ex, stay + ex];
+}
+
+function scroll() { chat.scrollTop = chat.scrollHeight; }
+function lockOld() { chat.querySelectorAll(".kb button").forEach(x => x.disabled = true); }
+function me(text) { lockOld(); const el = document.createElement("div"); el.className = "msg me"; el.textContent = text; chat.appendChild(el); scroll(); }
+
+async function typing() { const t = document.createElement("div"); t.className = "typing"; t.innerHTML = "<i></i><i></i><i></i>"; chat.appendChild(t); scroll(); await sleep(400); t.remove(); }
+
+async function bot(html, buttons = [], cols = 1, extra = "") {
+  await typing();
+  const el = document.createElement("div"); el.className = "msg bot " + extra; el.innerHTML = html; chat.appendChild(el);
+  if (buttons.length) {
+    const kb = document.createElement("div"); kb.className = "kb"; kb.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    for (const [label, fn, span] of buttons) {
+      const x = document.createElement("button"); x.textContent = label; if (span) x.style.gridColumn = `span ${span}`;
+      x.onclick = () => { me(label); fn(); }; kb.appendChild(x);
+    }
+    chat.appendChild(kb);
+  }
+  scroll(); return el;
+}
+
+// Календарь, который перерисовывается на месте при смене месяца (как edit_message в Telegram)
+async function calendar(html, year, month, isAvail, first, last, onPick, back) {
+  await typing();
+  const el = document.createElement("div"); el.className = "msg bot"; el.innerHTML = html; chat.appendChild(el);
+  const kb = document.createElement("div"); kb.className = "kb cal"; kb.style.gridTemplateColumns = "repeat(7, 1fr)"; chat.appendChild(kb);
+  const draw = (y, m) => {
+    kb.innerHTML = "";
+    const add = (text, cls, fn, span) => { const x = document.createElement("button"); x.type = "button"; x.textContent = text; if (cls) x.className = cls; if (span) x.style.gridColumn = `span ${span}`; if (fn) x.onclick = fn; else x.tabIndex = -1; kb.appendChild(x); };
+    const hasPrev = y * 12 + m > first.getFullYear() * 12 + first.getMonth(), hasNext = y * 12 + m < last.getFullYear() * 12 + last.getMonth();
+    add(hasPrev ? "◀️" : "", hasPrev ? "" : "blank", hasPrev ? () => draw(m ? y : y - 1, m ? m - 1 : 11) : null);
+    add(`${MONTHS_NOM[m]} ${y}`, "head", null, 5);
+    add(hasNext ? "▶️" : "", hasNext ? "" : "blank", hasNext ? () => draw(m === 11 ? y + 1 : y, (m + 1) % 12) : null);
+    ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"].forEach(w => add(w, "head"));
+    const start = (new Date(y, m, 1).getDay() + 6) % 7, days = new Date(y, m + 1, 0).getDate();
+    for (let i = 0; i < start; i++) add("", "blank");
+    for (let dd = 1; dd <= days; dd++) {
+      const d = new Date(y, m, dd);
+      if (d < first || d > last) add("·", "blank");
+      else if (isAvail(d)) add(String(dd), "", () => { me(`${dd} ${MONTHS[m]}`); onPick(d); });
+      else add("✖", "x");
+    }
+    add(back[0], "", () => { me(back[0]); back[1](); }, 4); add("✖️ Отмена", "", () => { me("✖️ Отмена"); cancelFlow(); }, 3);
+    scroll();
+  };
+  draw(year, month);
+}
+
+function setInput(ph, handler) { expectText = handler; input.disabled = send.disabled = !handler; input.placeholder = ph || "Сообщение"; if (handler) input.focus(); }
+document.getElementById("form").onsubmit = e => { e.preventDefault(); const v = input.value.trim(); if (!v || !expectText) return; input.value = ""; me(v); const h = expectText; setInput(null, null); h(v); };
+
+function summary() {
+  const [stay, ex, total] = price(b.house, b.ci, b.co, b.extras);
+  const exText = b.extras.map(id => EXTRAS.find(e => e.id === id).title).join(", ") || "нет";
+  return `${b.house.emoji} Домик: <b>${b.house.title}</b>\n📅 Заезд: <b>${fmt(b.ci)}</b> с 14:00\n📅 Выезд: <b>${fmt(b.co)}</b> до 12:00\n🌙 ${nightsWord((b.co - b.ci) / DAY)} · 👥 гостей: ${b.guests}\n✨ Доп. услуги: ${exText}\n\nПроживание: ${stay} р.${ex ? `\nДоп. услуги: ${ex} р.` : ""}\n💰 <b>Итого: ${total} р.</b>` + (b.phone ? `\n\n👤 ${b.name} · 📱 ${b.phone}` : "");
+}
+
+// ---------- Сценарии ----------
+async function start() {
+  setInput(null, null);
+  await bot(`Здравствуйте, Анна! 👋\n\nЭто бот <b>${ESTATE.name}</b> 🌲\nТихое место у озера в сосновом лесу: домики с печкой, баня на дровах, рыбалка и прогулки.\n\nЗдесь можно посмотреть свободные даты и забронировать домик за пару минут.`,
+    [["📅 Забронировать", chooseHouse, 2], ["🏡 Домики и цены", housesInfo], ["✨ Доп. услуги", extrasInfo], ["🗂 Мои брони", myBookings], ["📍 Как добраться", contacts]], 2);
+}
+
+async function chooseHouse() {
+  b = { extras: [] };
+  await bot("Выберите домик:", [...HOUSES.map(h => [`${h.emoji} ${h.title} · до ${h.capacity} чел. · от ${h.weekday} р.`, () => chooseIn(h)]), ["🏠 В меню", start]]);
+}
+
+async function chooseIn(house) {
+  b.house = house; const bz = busy(house.id);
+  await calendar(`${house.emoji} <b>${house.title}</b>\n\nВыберите <b>дату заезда</b> 📅\n<i>✖ — занято</i>`, today.getFullYear(), today.getMonth(),
+    d => canIn(house.id, d, bz), today, addDays(today, AHEAD), chooseOut, ["⬅️ К домикам", chooseHouse]);
+}
+
+async function chooseOut(ci) {
+  b.ci = ci; const first = addDays(ci, 1), last = maxOut(b.house.id, ci);
+  await calendar(`${b.house.emoji} <b>${b.house.title}</b>\nЗаезд: <b>${fmt(ci)}</b>\n\nВыберите <b>дату выезда</b> 📅`, first.getFullYear(), first.getMonth(),
+    d => d >= first && d <= last, first, last, chooseGuests, ["⬅️ Изменить заезд", () => chooseIn(b.house)]);
+}
+
+async function chooseGuests(co) {
+  b.co = co;
+  const opts = Array.from({ length: b.house.capacity }, (_, i) => [String(i + 1), () => { b.guests = i + 1; chooseExtras(); }]);
+  await bot(`${b.house.emoji} <b>${b.house.title}</b>\n📅 ${fmt(b.ci)} — ${fmt(co)} · ${nightsWord((co - b.ci) / DAY)}\n\nСколько будет гостей? (максимум ${b.house.capacity})`,
+    [...opts, ["⬅️ К датам", () => chooseIn(b.house), 3], ["✖️ Отмена", cancelFlow, 2]], 5);
+}
+
+async function chooseExtras() {
+  const total = price(b.house, b.ci, b.co, b.extras)[2];
+  await bot(`✨ <b>Добавить услуги?</b>\nНажмите, чтобы выбрать или убрать. Цена — за всё проживание.\n\n💰 Сейчас итого: <b>${total} р.</b>`,
+    [...EXTRAS.map(e => [`${b.extras.includes(e.id) ? "✅" : "▫️"} ${e.emoji} ${e.title} · ${e.price} р.`, () => {
+      b.extras = b.extras.includes(e.id) ? b.extras.filter(x => x !== e.id) : [...b.extras, e.id]; chooseExtras(); }]),
+     ["Далее ➡️", askName], ["✖️ Отмена", cancelFlow]]);
+}
+
+async function askName() {
+  await bot("На чьё имя оформить бронь? Напишите имя или нажмите кнопку:", [["👤 Анна", () => { b.name = "Анна"; askPhone(); }], ["✖️ Отмена", cancelFlow]]);
+  setInput("Ваше имя", v => { b.name = v.slice(0, 50); askPhone(); });
+}
+
+async function askPhone() {
+  setInput(null, null);
+  await bot("📱 Оставьте номер телефона — владелец свяжется с вами для подтверждения.\n\nНажмите кнопку ниже или напишите номер вручную.",
+    [["📱 Отправить мой номер", () => { b.phone = "+375291234567"; confirm(); }]]);
+  setInput("+375 29 123-45-67", typedPhone);
+}
+function typedPhone(v) {
+  const digits = v.replace(/\D/g, "");
+  if (digits.length < 9 || digits.length > 15) { bot("Не похоже на номер телефона 🤔 Пример: +375 29 123-45-67").then(() => setInput("+375 29 123-45-67", typedPhone)); return; }
+  b.phone = (v.trim().startsWith("+") ? "+" : "") + digits; confirm();
+}
+
+async function confirm() {
+  setInput(null, null);
+  await bot("Номер сохранён 👍");
+  await bot(`<b>Проверьте бронь:</b>\n\n${summary()}\n\nВсё верно?`, [["✅ Отправить заявку", submit], ["✖️ Отменить", cancelFlow]]);
+}
+
+async function submit() {
+  const x = { id: nextId++, ...b, status: "pending", total: price(b.house, b.ci, b.co, b.extras)[2] };
+  bookings.push(x);
+  await bot(`📨 <b>Заявка #${x.id} отправлена!</b>\n\n${summary()}\n\nВладелец усадьбы проверит её и подтвердит в ближайшее время — вам придёт сообщение здесь. Даты уже закреплены за вами.`, [["🏠 В меню", start]]);
+  ownerRequest(x);
+}
+
+function ownerRequest(x) {
+  notes.querySelector(".empty")?.remove();
+  const n = document.createElement("div"); n.className = "note";
+  n.innerHTML = `🆕 <b>Новая заявка #${x.id}</b><br>${x.house.title} · ${fmt(x.ci)} — ${fmt(x.co)}<br><small>👤 ${x.name}, ${x.phone} · 👥 ${x.guests} · 💰 ${x.total} р.</small><div class="acts"><button>✅ Подтвердить</button><button>❌ Отклонить</button></div>`;
+  const [ok, no] = n.querySelectorAll("button");
+  const decide = async accept => {
+    ok.disabled = no.disabled = true;
+    if (x.status !== "pending") return;
+    x.status = accept ? "confirmed" : "declined";
+    n.querySelector(".acts").outerHTML = `<small>${accept ? "✅ Подтверждено — гость получил сообщение" : "❌ Отклонено — гость получил сообщение"}</small>`;
+    if (accept) await bot(`✅ <b>Ваша бронь #${x.id} подтверждена!</b>\n\n${x.house.title}\n📅 ${fmt(x.ci)} — ${fmt(x.co)}\n\nЗаезд с 14:00. Адрес: ${ESTATE.address}\nЖдём вас! 🌲`, [], 1, "ok");
+    else await bot(`😔 <b>Бронь #${x.id} не подтверждена</b>\n\n${x.house.title}\n📅 ${fmt(x.ci)} — ${fmt(x.co)}\n\nК сожалению, на эти даты разместить вас не получится. Выберите другие даты или позвоните нам: ${ESTATE.phone}`);
+  };
+  ok.onclick = () => decide(true); no.onclick = () => decide(false);
+  notes.prepend(n);
+}
+
+async function cancelFlow() { setInput(null, null); b = { extras: [] }; await bot("Бронь не оформлена. Возвращайтесь, когда будет удобно 🌲", [["🏠 В меню", start]]); }
+
+async function myBookings() {
+  const list = bookings.filter(x => x.status === "pending" || x.status === "confirmed");
+  if (!list.length) { await bot("🗂 У вас пока нет предстоящих броней.", [["📅 Новая бронь", chooseHouse], ["🏠 В меню", start]], 2); return; }
+  const st = { pending: "🕓 ждёт подтверждения", confirmed: "✅ подтверждена" };
+  await bot("🗂 <b>Ваши брони</b>\n\n" + list.map(x => `<b>#${x.id} · ${x.house.title}</b> — ${st[x.status]}\n📅 ${fmt(x.ci)} — ${fmt(x.co)}\n👥 ${x.guests} · 💰 ${x.total} р.`).join("\n\n"),
+    [...list.map(x => [`❌ Отменить бронь #${x.id}`, () => cancelBooking(x), 2]), ["📅 Новая бронь", chooseHouse], ["🏠 В меню", start]], 2);
+}
+
+async function cancelBooking(x) {
+  x.status = "cancelled";
+  notes.querySelector(".empty")?.remove();
+  const n = document.createElement("div"); n.className = "note cancel";
+  n.innerHTML = `❌ <b>Гость отменил бронь #${x.id}</b><br>${x.house.title} · ${fmt(x.ci)} — ${fmt(x.co)}<br><small>👤 ${x.name}, ${x.phone}</small>`;
+  notes.prepend(n);
+  await bot("Бронь отменена ✅"); myBookings();
+}
+
+async function housesInfo() {
+  await bot("🏡 <b>Домики и цены</b>\n\n" + HOUSES.map(h => `${h.emoji} <b>${h.title}</b> — до ${h.capacity} гостей\n${h.desc}\nБудни: ${h.weekday} р./ночь · Пт–Сб: ${h.weekend} р./ночь`).join("\n\n") + "\n\nЗаезд с 14:00, выезд до 12:00.",
+    [["📅 Забронировать", chooseHouse], ["🏠 В меню", start]]);
+}
+async function extrasInfo() {
+  await bot("✨ <b>Дополнительные услуги</b>\n\n" + EXTRAS.map(e => `${e.emoji} <b>${e.title}</b> — ${e.price} р.`).join("\n") + "\n\nЦена указана за всё проживание.",
+    [["📅 Забронировать", chooseHouse], ["🏠 В меню", start]]);
+}
+async function contacts() {
+  await bot(`📍 <b>${ESTATE.name}</b>\n\nАдрес: ${ESTATE.address}\nТелефон: ${ESTATE.phone}\nЗаезд с 14:00, выезд до 12:00`, [["🏠 В меню", start]]);
+}
+
+document.getElementById("restart").onclick = () => { chat.innerHTML = ""; b = { extras: [] }; start(); };
+(async () => { const el = document.createElement("div"); el.className = "msg me"; el.textContent = "/start"; chat.appendChild(el); await start(); })();
+</script>
+</body>
+</html>
