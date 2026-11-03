@@ -85,7 +85,7 @@ h1 span { color: var(--accent); }
     <p class="lead">Клиенты сами выбирают услугу и свободное время, а владелец сразу получает уведомление. Без звонков, переписок и путаницы в тетрадке.</p>
 
     <div class="features">
-      <div class="f"><b>📅 Только свободное время</b><p>Бот учитывает длительность услуг и уже занятые окна — двойной записи не будет.</p></div>
+      <div class="f"><b>👥 Несколько мастеров</b><p>У каждого своё расписание. Клиент выбирает мастера или «любого свободного» — двойной записи не будет.</p></div>
       <div class="f"><b>⏰ Напоминания</b><p>Клиент получает напоминание за 2 часа — меньше «забыл и не пришёл».</p></div>
       <div class="f"><b>🔔 Уведомления владельцу</b><p>О каждой новой записи и отмене — сразу в Telegram.</p></div>
       <div class="f"><b>🛠 Панель администратора</b><p>Записи на сегодня, завтра и неделю, выручка, отмена в один клик.</p></div>
@@ -122,6 +122,11 @@ const SERVICES = [
   { id: 4, emoji: "💅", title: "Маникюр с покрытием", price: 40, duration: 90 },
   { id: 5, emoji: "✨", title: "Укладка", price: 25, duration: 30 },
 ];
+const MASTERS = [
+  { id: 1, name: "Ольга", role: "стилист-парикмахер", services: [1, 2, 3, 5] },
+  { id: 2, name: "Дмитрий", role: "барбер", services: [2] },
+  { id: 3, name: "Ирина", role: "мастер маникюра", services: [4] },
+];
 const WD = ["Вс","Пн","Вт","Ср","Чт","Пт","Сб"];
 const MONTHS = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
 const chat = document.getElementById("chat"), notes = document.getElementById("notes");
@@ -129,8 +134,8 @@ const input = document.getElementById("text"), send = document.getElementById("s
 
 let booking = {}, bookings = [], expectText = null, nextId = 1;
 
-// Демонстрационно «занятые» окна, чтобы сетка выглядела живой
-const busySeed = ["10:00","10:30","13:00","13:30","16:00"];
+// Демонстрационно «занятые» окна у каждого мастера, чтобы сетка выглядела живой
+const busySeed = { 1: ["10:00","10:30","13:00","16:00"], 2: ["11:00","14:30","17:00"], 3: ["10:00","13:30"] };
 
 const fmtDate = d => `${WD[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]}`;
 const pad = n => String(n).padStart(2, "0");
@@ -168,15 +173,25 @@ document.getElementById("form").onsubmit = e => {
   input.value = ""; me(v); const h = expectText; setInput(null, null); h(v);
 };
 
+const mastersFor = service => MASTERS.filter(m => m.services.includes(service.id));
+const candidates = () => booking.masterId ? MASTERS.filter(m => m.id === booking.masterId) : mastersFor(booking.service);
+
 function days() {
   const res = []; const d = new Date(); d.setHours(0,0,0,0);
-  for (let i = 0; i < 7; i++) { const x = new Date(d); x.setDate(d.getDate() + i); if (x.getDay() !== 0 && slots(x, 30).length) res.push(x); }
+  for (let i = 0; i < 7; i++) { const x = new Date(d); x.setDate(d.getDate() + i); if (x.getDay() !== 0 && slotsAny(x).length) res.push(x); }
   return res;
 }
 
-function slots(day, duration) {
-  const busy = busySeed.map(s => { const [h, m] = s.split(":").map(Number); return [h * 60 + m, h * 60 + m + 30]; });
-  for (const b of bookings) if (b.day.toDateString() === day.toDateString()) busy.push([b.start, b.start + b.duration]);
+// Время, свободное хотя бы у одного подходящего мастера
+function slotsAny(day) {
+  const set = new Set(); for (const m of candidates()) slots(day, booking.service.duration, m.id).forEach(t => set.add(t));
+  return [...set].sort((a, b) => a - b);
+}
+const pickMaster = (day, t) => candidates().find(m => slots(day, booking.service.duration, m.id).includes(t));
+
+function slots(day, duration, masterId) {
+  const busy = busySeed[masterId].map(s => { const [h, m] = s.split(":").map(Number); return [h * 60 + m, h * 60 + m + 30]; });
+  for (const b of bookings) if (b.master.id === masterId && b.day.toDateString() === day.toDateString()) busy.push([b.start, b.start + b.duration]);
   const now = new Date(); const isToday = day.toDateString() === now.toDateString();
   const earliest = isToday ? now.getHours() * 60 + now.getMinutes() + 60 : 0;
   const res = [];
@@ -187,7 +202,7 @@ function slots(day, duration) {
 
 function summary() {
   const s = booking.service;
-  return `💇 Услуга: <b>${s.title}</b>\n📅 Дата: <b>${fmtDate(booking.day)}</b>\n🕐 Время: <b>${hm(booking.start)}–${hm(booking.start + s.duration)}</b>\n💰 Стоимость: <b>${s.price} р.</b>\n👤 Имя: <b>${booking.name}</b>\n📱 Телефон: <b>${booking.phone}</b>`;
+  return `💇 Услуга: <b>${s.title}</b>\n👤 Мастер: <b>${booking.master.name}</b>\n📅 Дата: <b>${fmtDate(booking.day)}</b>\n🕐 Время: <b>${hm(booking.start)}–${hm(booking.start + s.duration)}</b>\n💰 Стоимость: <b>${s.price} р.</b>\n👤 Имя: <b>${booking.name}</b>\n📱 Телефон: <b>${booking.phone}</b>`;
 }
 
 function ownerNote(html, cls = "") {
@@ -204,26 +219,39 @@ async function start() {
 
 async function chooseService() {
   booking = {};
-  await bot("Выберите услугу:", [...SERVICES.map(s => [`${s.emoji} ${s.title} — ${s.price} р.`, () => chooseDay(s)]), ["🏠 В меню", start]]);
+  await bot("Выберите услугу:", [...SERVICES.map(s => [`${s.emoji} ${s.title} — ${s.price} р.`, () => chooseMaster(s)]), ["🏠 В меню", start]]);
 }
 
-async function chooseDay(service) {
-  booking.service = service;
-  const ds = days().filter(d => slots(d, service.duration).length);
-  await bot(`${service.emoji} <b>${service.title}</b> · ${service.price} р.\n\nВыберите дату:`,
-    [...ds.map(d => [`${WD[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()].slice(0, 4)}.`, () => chooseTime(d)]), ["⬅️ К услугам", chooseService], ["✖️ Отмена", cancelFlow]], 2);
+const masterLabel = () => booking.masterId ? `👤 ${MASTERS.find(m => m.id === booking.masterId).name}` : "✨ Любой свободный мастер";
+
+async function chooseMaster(service) {
+  booking = { service };
+  const ms = mastersFor(service);
+  if (ms.length === 1) { booking.masterId = ms[0].id; return chooseDay(); }
+  await bot(`${service.emoji} <b>${service.title}</b> · ${service.price} р.\n\nК кому хотите записаться?`,
+    [["✨ Любой свободный мастер", () => { booking.masterId = 0; chooseDay(); }],
+     ...ms.map(m => [`👤 ${m.name} — ${m.role}`, () => { booking.masterId = m.id; chooseDay(); }]),
+     ["⬅️ К услугам", chooseService], ["✖️ Отмена", cancelFlow]]);
+}
+
+async function chooseDay() {
+  const service = booking.service, multi = mastersFor(service).length > 1;
+  await bot(`${service.emoji} <b>${service.title}</b> · ${service.price} р.\n${masterLabel()}\n\nВыберите дату:`,
+    [...days().map(d => [`${WD[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()].slice(0, 4)}.`, () => chooseTime(d)]),
+     multi ? ["⬅️ К мастерам", () => chooseMaster(service)] : ["⬅️ К услугам", chooseService], ["✖️ Отмена", cancelFlow]], 2);
 }
 
 async function chooseTime(day) {
   booking.day = day;
   const s = booking.service;
-  await bot(`${s.emoji} <b>${s.title}</b>\n📅 ${fmtDate(day)}\n\nВыберите время:`,
-    [...slots(day, s.duration).map(t => [hm(t), () => askName(t)]), ["⬅️ К датам", () => chooseDay(s), 2], ["✖️ Отмена", cancelFlow, 2]], 4);
+  await bot(`${s.emoji} <b>${s.title}</b>\n${masterLabel()}\n📅 ${fmtDate(day)}\n\nВыберите время:`,
+    [...slotsAny(day).map(t => [hm(t), () => askName(t)]), ["⬅️ К датам", chooseDay, 2], ["✖️ Отмена", cancelFlow, 2]], 4);
 }
 
 async function askName(t) {
   booking.start = t;
-  await bot(`🕐 ${fmtDate(booking.day)}, ${hm(t)}\n\nКак к вам обращаться? Напишите имя или нажмите кнопку:`,
+  booking.master = pickMaster(booking.day, t);
+  await bot(`🕐 ${fmtDate(booking.day)}, ${hm(t)} · мастер ${booking.master.name}\n\nКак к вам обращаться? Напишите имя или нажмите кнопку:`,
     [["👤 Анна", () => { booking.name = "Анна"; askPhone(); }], ["✖️ Отмена", cancelFlow]]);
   setInput("Ваше имя", v => { booking.name = v.slice(0, 50); askPhone(); });
 }
@@ -254,7 +282,7 @@ async function done() {
   const b = { id: nextId++, ...booking, duration: booking.service.duration };
   bookings.push(b);
   await bot(`✅ <b>Вы записаны!</b>\n\n${summary()}\n\n📍 ${SALON.address}\n\nНапомню о визите за 2 ч. Отменить запись можно в разделе «Мои записи».`, [["🏠 В меню", start]], 1, "ok");
-  ownerNote(`🆕 <b>Новая запись #${b.id}</b><br>${b.service.title} · ${fmtDate(b.day)}, ${hm(b.start)}<br><small>👤 ${b.name}, ${b.phone} · ${b.service.price} р.</small>`);
+  ownerNote(`🆕 <b>Новая запись #${b.id}</b><br>${b.service.title} · мастер ${b.master.name} · ${fmtDate(b.day)}, ${hm(b.start)}<br><small>👤 ${b.name}, ${b.phone} · ${b.service.price} р.</small>`);
 }
 
 async function cancelFlow() { setInput(null, null); booking = {}; await bot("Запись не оформлена. Возвращайтесь, когда будет удобно 🙂", [["🏠 В меню", start]]); }
