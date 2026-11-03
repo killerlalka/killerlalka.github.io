@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Telegram-боты для бизнеса — портфолио</title>
+<meta name="description" content="Разработка Telegram-ботов для малого бизнеса в Беларуси: запись клиентов, бронирование, приём заявок.">
+<style>
+:root {
+  --bg: #0a0f1a; --panel: #111827; --panel-2: #151e30; --line: #233047;
+  --text: #f1f5f9; --muted: #94a3b8; --blue: #38bdf8; --green: #4ade80; --violet: #a78bfa;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+a { color: inherit; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap > * { min-width: 0; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+
+/* nav */
+nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; backdrop-filter: blur(12px); background: rgba(10,15,26,.75); border-bottom: 1px solid rgba(35,48,71,.6); }
+nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+.logo { font-weight: 800; font-size: 18px; letter-spacing: -.3px; display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.logo i { width: 32px; height: 32px; border-radius: 10px; background: linear-gradient(135deg, var(--blue), var(--violet)); display: grid; place-items: center; font-style: normal; font-size: 17px; }
+.links { display: flex; gap: 28px; font-size: 15px; color: var(--muted); }
+.links a { text-decoration: none; } .links a:hover { color: var(--text); }
+
+/* hero */
+.hero { position: relative; padding: 96px 0 72px; overflow: hidden; }
+.hero::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 80% 10%, rgba(30,58,138,.7), transparent 45%), radial-gradient(circle at 10% 90%, rgba(20,83,45,.55), transparent 40%); z-index: -1; }
+.eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--muted); border: 1px solid var(--line); background: rgba(17,24,39,.6); border-radius: 999px; padding: 6px 14px; }
+.eyebrow b { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px rgba(74,222,128,.2); }
+h1 { font-size: 64px; line-height: 1.03; letter-spacing: -2px; font-weight: 800; margin-top: 22px; max-width: 820px; }
+h1 span { background: linear-gradient(90deg, var(--blue), var(--green)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.lead { font-size: 21px; color: var(--muted); margin-top: 22px; max-width: 640px; }
+.cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 34px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 16px; padding: 14px 24px; border-radius: 14px; text-decoration: none; border: 1px solid var(--line); transition: transform .15s, background .15s; }
+.btn:hover { transform: translateY(-1px); }
+.btn.primary { background: var(--blue); color: #04121f; border-color: var(--blue); }
+.btn.ghost { background: rgba(17,24,39,.7); }
+.stats { display: flex; gap: 40px; margin-top: 56px; flex-wrap: wrap; }
+.stat b { display: block; font-size: 30px; font-weight: 800; }
+.stat span { font-size: 15px; color: var(--muted); }
+
+section { padding: 72px 0; }
+h2 { font-size: 40px; letter-spacing: -1px; line-height: 1.1; }
+.sub { color: var(--muted); font-size: 18px; margin-top: 10px; max-width: 640px; }
+
+/* projects */
+.projects { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 40px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 26px; overflow: hidden; display: flex; flex-direction: column; }
+.preview { height: 260px; position: relative; display: flex; align-items: flex-end; justify-content: center; overflow: hidden; }
+.preview.blue { background: radial-gradient(circle at 70% 20%, #1e3a8a, transparent 60%), #0b1220; }
+.preview.green { background: radial-gradient(circle at 30% 20%, #14532d, transparent 60%), #0a1510; }
+.mini { width: 270px; height: 230px; border-radius: 26px 26px 0 0; border: 2px solid rgba(255,255,255,.12); border-bottom: none; padding: 16px 14px 0; display: flex; flex-direction: column; gap: 7px; }
+.blue .mini { background: #111a2e; } .green .mini { background: #10201a; }
+.mini .m { font-size: 12.5px; line-height: 1.35; padding: 7px 11px; border-radius: 13px; max-width: 88%; }
+.mini .bot { align-self: flex-start; border-bottom-left-radius: 4px; }
+.mini .me { align-self: flex-end; border-bottom-right-radius: 4px; }
+.blue .bot { background: #1e293b; } .blue .me { background: #2563eb; }
+.green .bot { background: #1a3226; } .green .me { background: #15803d; }
+.mini .row { display: grid; gap: 5px; }
+.mini .row span { font-size: 11.5px; font-weight: 600; text-align: center; padding: 6px 0; border-radius: 9px; }
+.blue .row span { background: #0f2a44; color: #7dd3fc; border: 1px solid #1d4b70; }
+.green .row span { background: #0f2c1f; color: #86efac; border: 1px solid #1f5236; }
+.green .row span.x { color: #f87171; }
+.card .body { padding: 26px 28px 28px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+.card h3 { font-size: 24px; letter-spacing: -.4px; }
+.card p { color: var(--muted); font-size: 16px; }
+.card ul { list-style: none; display: grid; gap: 8px; font-size: 15px; }
+.card li { display: flex; gap: 10px; }
+.card li::before { content: "✓"; font-weight: 800; }
+.card.b li::before { color: var(--blue); } .card.g li::before { color: var(--green); }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { font-size: 13px; font-weight: 600; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px; }
+.card .actions { margin-top: auto; padding-top: 6px; display: flex; gap: 10px; flex-wrap: wrap; }
+.card.b .btn.primary { background: var(--blue); border-color: var(--blue); }
+.card.g .btn.primary { background: var(--green); border-color: var(--green); color: #052012; }
+
+/* services */
+.services { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 40px; }
+.svc { background: var(--panel); border: 1px solid var(--line); border-radius: 22px; padding: 24px; display: flex; flex-direction: column; gap: 10px; }
+.svc .ic { font-size: 28px; }
+.svc h4 { font-size: 19px; }
+.svc p { color: var(--muted); font-size: 15px; flex: 1; }
+.svc .price { font-size: 22px; font-weight: 800; color: var(--blue); }
+.note { color: var(--muted); font-size: 15px; margin-top: 18px; }
+
+/* steps */
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 40px; counter-reset: s; }
+.step { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 22px; padding: 26px 22px 22px; }
+.step::before { counter-increment: s; content: counter(s); display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, var(--blue), var(--violet)); color: #04121f; font-weight: 800; margin-bottom: 14px; }
+.step h4 { font-size: 18px; margin-bottom: 6px; }
+.step p { color: var(--muted); font-size: 15px; }
+
+/* faq */
+.faq { margin-top: 32px; display: grid; gap: 12px; max-width: 820px; }
+details { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 18px 22px; }
+summary { cursor: pointer; font-weight: 700; font-size: 17px; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: "+"; color: var(--muted); font-size: 22px; line-height: 1; }
+details[open] summary::after { content: "–"; }
+details p { color: var(--muted); margin-top: 10px; font-size: 16px; }
+
+/* contact */
+.contact { text-align: center; background: radial-gradient(circle at 50% 0%, rgba(30,58,138,.55), transparent 60%), var(--panel); border: 1px solid var(--line); border-radius: 32px; padding: 64px 24px; }
+.contact .cta { justify-content: center; }
+footer { color: #64748b; font-size: 14px; text-align: center; padding: 40px 0 48px; }
+
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn { transition: none; } }
+@media (max-width: 900px) {
+  h1 { font-size: 42px; letter-spacing: -1px; }
+  .lead { font-size: 18px; }
+  .links { display: none; }
+  .projects, .services { grid-template-columns: 1fr; }
+  .steps { grid-template-columns: 1fr 1fr; }
+  h2 { font-size: 32px; }
+  .hero { padding: 64px 0 48px; }
+}
+@media (max-width: 520px) { .steps { grid-template-columns: 1fr; } .stats { gap: 24px; } }
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a class="logo" href="#"><i>🤖</i>Боты для бизнеса</a>
+  <div class="links"><a href="#projects">Проекты</a><a href="#services">Услуги и цены</a><a href="#how">Как работаю</a><a href="#contact">Контакты</a></div>
+</div></nav>
+
+<header class="hero"><div class="wrap">
+  <div class="eyebrow"><b></b>Принимаю заказы · Беларусь, удалённо</div>
+  <h1>Telegram-боты, которые <span>работают за вас 24/7</span></h1>
+  <p class="lead">Делаю ботов для малого бизнеса: запись клиентов, бронирование, приём заявок и заказов. Пока вы заняты делом — бот отвечает клиентам и собирает записи.</p>
+  <div class="cta">
+    <a class="btn primary" href="#projects">Посмотреть демо →</a>
+    <a class="btn ghost" href="#contact">Обсудить задачу</a>
+  </div>
+  <div class="stats">
+    <div class="stat"><b>от 3 дней</b><span>срок разработки</span></div>
+    <div class="stat"><b>от 40 р.</b><span>стоимость простого бота</span></div>
+    <div class="stat"><b>0 р.</b><span>оценка задачи и демо</span></div>
+  </div>
+</div></header>
+
+<section id="projects"><div class="wrap">
+  <h2>Проекты</h2>
+  <p class="sub">Оба бота можно попробовать прямо в браузере — нажимайте кнопки, как настоящий клиент.</p>
+  <div class="projects">
+
+    <article class="card b">
+      <div class="preview blue"><div class="mini">
+        <div class="m bot">Выберите время на завтра:</div>
+        <div class="row" style="grid-template-columns:repeat(3,1fr)"><span>10:00</span><span>12:30</span><span>15:00</span></div>
+        <div class="m me">12:30</div>
+        <div class="m bot" style="background:#14532d">✅ Вы записаны! Напомню за 2 часа.</div>
+      </div></div>
+      <div class="body">
+        <h3>💇‍♀️ Запись клиентов в салон</h3>
+        <p>Клиент сам выбирает услугу и свободное время, владелец сразу получает уведомление. Подходит салонам, барбершопам, мастерам, массажистам.</p>
+        <ul>
+          <li>Только реально свободное время — без двойных записей</li>
+          <li>Напоминание клиенту за 2 часа до визита</li>
+          <li>Панель владельца: записи на день и неделю, выручка</li>
+        </ul>
+        <div class="chips"><span class="chip">Python</span><span class="chip">aiogram 3</span><span class="chip">SQLite</span></div>
+        <div class="actions"><a class="btn primary" href="demos/salon.html">Попробовать демо →</a></div>
+      </div>
+    </article>
+
+    <article class="card g">
+      <div class="preview green"><div class="mini">
+        <div class="m bot">Выберите дату заезда 📅</div>
+        <div class="row" style="grid-template-columns:repeat(7,1fr)"><span>9</span><span class="x">✖</span><span class="x">✖</span><span>12</span><span>13</span><span>14</span><span>15</span></div>
+        <div class="m me">13 ноября</div>
+        <div class="m bot">🌙 2 ночи · 💰 <b>Итого: 360 р.</b></div>
+      </div></div>
+      <div class="body">
+        <h3>🌲 Бронирование для агроусадьбы</h3>
+        <p>Гость выбирает домик и даты в календаре, видит итоговую цену и отправляет заявку. Владелец подтверждает одной кнопкой.</p>
+        <ul>
+          <li>Календарь занятости и цены будни / выходные</li>
+          <li>Доп. услуги: баня, беседка, лодка — с автоподсчётом</li>
+          <li>Заявки с кнопками «Подтвердить / Отклонить»</li>
+        </ul>
+        <div class="chips"><span class="chip">Python</span><span class="chip">aiogram 3</span><span class="chip">SQLite</span></div>
+        <div class="actions"><a class="btn primary" href="demos/agro.html">Попробовать демо →</a></div>
+      </div>
+    </article>
+
+  </div>
+</div></section>
+
+<section id="services"><div class="wrap">
+  <h2>Услуги и цены</h2>
+  <p class="sub">Цена зависит от задачи. Напишите, что нужно, — бесплатно оценю сроки и стоимость.</p>
+  <div class="services">
+    <div class="svc"><div class="ic">💬</div><h4>Простой бот</h4><p>Меню с кнопками, ответы на частые вопросы, прайс, контакты.</p><div class="price">от 40 р.</div></div>
+    <div class="svc"><div class="ic">📅</div><h4>Запись и заявки</h4><p>Запись клиентов на время или приём заявок с уведомлением владельцу.</p><div class="price">от 90 р.</div></div>
+    <div class="svc"><div class="ic">🏡</div><h4>Бронирование</h4><p>Календарь занятости, расчёт стоимости, подтверждение броней.</p><div class="price">от 150 р.</div></div>
+    <div class="svc"><div class="ic">🗄</div><h4>Бот с базой и рассылками</h4><p>Каталог, база клиентов, рассылки, админ-панель в Telegram.</p><div class="price">от 180 р.</div></div>
+    <div class="svc"><div class="ic">📊</div><h4>Парсинг сайтов</h4><p>Соберу товары, цены и данные с сайта в Excel или Google Таблицы.</p><div class="price">от 20 р.</div></div>
+    <div class="svc"><div class="ic">⚙️</div><h4>Скрипты автоматизации</h4><p>Обработка Excel/CSV, отчёты, рутинные задачи на Python.</p><div class="price">от 20 р.</div></div>
+  </div>
+  <p class="note">В стоимость входят исходный код, инструкция и бесплатные правки в рамках задачи. Оплата: 50% до начала, 50% после проверки.</p>
+</div></section>
+
+<section id="how"><div class="wrap">
+  <h2>Как я работаю</h2>
+  <div class="steps">
+    <div class="step"><h4>Обсуждаем задачу</h4><p>Вы рассказываете о бизнесе, я предлагаю, что должен уметь бот, и называю цену.</p></div>
+    <div class="step"><h4>Показываю демо</h4><p>До оплаты показываю похожего бота — вы сразу видите, как это будет работать.</p></div>
+    <div class="step"><h4>Делаю бота</h4><p>3–7 дней в зависимости от задачи. Показываю промежуточный результат.</p></div>
+    <div class="step"><h4>Запускаю и обучаю</h4><p>Помогаю запустить, объясняю, как пользоваться и менять услуги и цены.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Частые вопросы</h2>
+  <div class="faq">
+    <details><summary>Что нужно от меня, чтобы начать?</summary><p>Описание того, что должен делать бот, ваши услуги и цены. Всё остальное — создание бота в Telegram, настройку и запуск — я сделаю или подскажу по шагам.</p></details>
+    <details><summary>Бот будет работать круглосуточно?</summary><p>Да, для этого бот размещается на сервере. Сервер стоит примерно 5–15 р. в месяц, помогу выбрать и всё настроить.</p></details>
+    <details><summary>Смогу ли я сам поменять цены и услуги?</summary><p>Да. Все настройки собраны в одном файле — покажу, где и как их менять. Или внесу изменения сам.</p></details>
+    <details><summary>Можно доработать бота потом?</summary><p>Конечно. Новые функции, интеграции, рассылки — бот можно развивать вместе с бизнесом.</p></details>
+  </div>
+</div></section>
+
+<section id="contact"><div class="wrap">
+  <div class="contact">
+    <h2>Нужен бот для вашего бизнеса?</h2>
+    <p class="sub" style="margin: 12px auto 0">Напишите — бесплатно оценю задачу и покажу демо похожего бота.</p>
+    <div class="cta" id="contacts"></div>
+  </div>
+</div></section>
+
+<footer>© <span id="year"></span> · Разработка Telegram-ботов · Беларусь</footer>
+
+<script>
+// ✏️ Впишите свои контакты — пустые кнопки не показываются
+const CONTACTS = {
+  telegram: "https://t.me/surrenderthethrone",
+  kufar: "",      // ссылка на ваше объявление на Kufar
+  phone: "",      // например: "+375291234567"
+};
+
+const box = document.getElementById("contacts");
+const items = [
+  [CONTACTS.telegram, "✈️ Написать в Telegram", "primary"],
+  [CONTACTS.kufar, "🛒 Объявление на Kufar", "ghost"],
+].filter(([href]) => href);
+for (const [href, label, cls] of items) {
+  const a = document.createElement("a"); a.className = "btn " + cls; a.href = href; a.textContent = label;
+  a.target = "_blank"; a.rel = "noopener";
+  box.appendChild(a);
+}
+if (CONTACTS.phone) {
+  const s = document.createElement("span"); s.className = "btn ghost"; s.style.cursor = "text"; s.style.userSelect = "all";
+  s.textContent = "📞 " + CONTACTS.phone; box.appendChild(s);
+}
+if (!box.children.length) box.innerHTML = '<span class="btn ghost" style="cursor:default">Контакты скоро появятся</span>';
+document.getElementById("year").textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
